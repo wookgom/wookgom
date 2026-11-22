@@ -1,0 +1,30 @@
+name: Refresh year progress
+on:
+  schedule:
+    - cron: '17 15 * * *' # 00:17 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: year-progress-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  draw:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Draw the year
+        run: python3 scripts/year_progress.py
+      - name: Save today's position
+        run: |
+          git add assets/year.svg
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Update year progress"
+            git pull --rebase
+            git push
+          fi
